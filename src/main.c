@@ -10,9 +10,12 @@ int main(void) {
         return 1;
     }
 
-    char *langs = request_supported_languages();
-    fputs((langs != NULL) ? langs : "Empty response", stdout);
-    xfree(langs);
+    char *res = request_detect("Hello world!");
+    // char *res = request_languages();
+    // char *res = request_translate("Hello world!", "en", "es");
+    // char *res = request_translate_file("test.txt", "en", "es");
+    fputs((res != NULL) ? res : "Empty response", stdout);
+    xfree(res);
 
     curl_global_cleanup();
     return 0;
