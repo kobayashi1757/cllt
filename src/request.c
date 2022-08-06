@@ -1,8 +1,10 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <cJSON.h>
 #include "config.h"
 #include "memory.h"
 #include "request.h"
@@ -21,6 +23,7 @@ static size_t string_write_callback(char *ptr, size_t size, size_t nmemb, void *
 static void check_nonnull(void *ptr, const char *function);
 static void check_curlcode(CURLcode code, const char *error_buf);
 static char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields);
+static void handle_error_response(const char *res, long res_code, int num, long *error_codes);
 
 char *request_detect(const char *q) {
     CURL *curl = curl_easy_init();
@@ -45,13 +48,13 @@ char *request_detect(const char *q) {
     check_curlcode(curl_easy_perform(curl), error_buf);
 
     // Check response code
-    // TODO: handle error response code
     long response_code;
     check_curlcode(curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code), NULL);
     if (response_code != 200L) {
-        fprintf(stderr, "Response code: %ld\n", response_code);
-        fprintf(stderr, "Response: %s\n", (string.data != NULL) ? string.data : "(null)");
-        exit(1);
+        handle_error_response(string.data, response_code, 4, (long[]) { 400L, 403L, 429L, 500L });
+
+        // We should never reach here
+        assert(false);
     }
 
     curl_easy_cleanup(curl);
@@ -80,13 +83,13 @@ char *request_languages(void) {
     check_curlcode(curl_easy_perform(curl), error_buf);
 
     // Check response code
-    // TODO: handle error response code
     long response_code;
     check_curlcode(curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code), NULL);
     if (response_code != 200L) {
-        fprintf(stderr, "Response code: %ld\n", response_code);
-        fprintf(stderr, "Response: %s\n", (string.data != NULL) ? string.data : "(null)");
-        exit(1);
+        handle_error_response(string.data, response_code, 1, (long[]) { 429L });
+
+        // We should never reach here
+        assert(false);
     }
 
     curl_easy_cleanup(curl);
@@ -116,13 +119,13 @@ char *request_translate(const char *q, const char *source, const char *target) {
     check_curlcode(curl_easy_perform(curl), error_buf);
 
     // Check response code
-    // TODO: handle error response code
     long response_code;
     check_curlcode(curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code), NULL);
     if (response_code != 200L) {
-        fprintf(stderr, "Response code: %ld\n", response_code);
-        fprintf(stderr, "Response: %s\n", (string.data != NULL) ? string.data : "(null)");
-        exit(1);
+        handle_error_response(string.data, response_code, 4, (long[]) { 400L, 403L, 429L, 500L });
+
+        // We should never reach here
+        assert(false);
     }
 
     curl_easy_cleanup(curl);
@@ -176,13 +179,13 @@ char *request_translate_file(const char *file, const char *source, const char *t
     check_curlcode(curl_easy_perform(curl), error_buf);
 
     // Check response code
-    // TODO: handle error response code
     long response_code;
     check_curlcode(curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code), NULL);
     if (response_code != 200L) {
-        fprintf(stderr, "Response code: %ld\n", response_code);
-        fprintf(stderr, "Response: %s\n", (string.data != NULL) ? string.data : "(null)");
-        exit(1);
+        handle_error_response(string.data, response_code, 4, (long[]) { 400L, 403L, 429L, 500L });
+
+        // We should never reach here
+        assert(false);
     }
 
     curl_easy_cleanup(curl);
@@ -265,4 +268,35 @@ char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields) {
         curl_free(escaped_strings[i]);
     }
     return encoded_string;
+}
+
+static
+void handle_error_response(const char *res, long res_code, int num, long *known_error_codes) {
+    cJSON *json = NULL;
+    cJSON *error = NULL;
+    const char *error_string = NULL;
+
+    if (res != NULL) {
+        json = cJSON_Parse(res);
+    }
+    if (json != NULL) {
+        error = cJSON_GetObjectItem(json, "error");
+    }
+    if (error != NULL) {
+        error_string = cJSON_GetStringValue(error);
+    }
+
+    for (int i=0; i<num; i++) {
+        if (known_error_codes[i] == res_code) {
+            if (error_string != NULL) {
+                fputs(error_string, stderr);
+            } else {
+                fprintf(stderr, "%ld", res_code);
+            }
+            exit(1);
+        }
+    }
+
+    fprintf(stderr, "Unknown response code: %ld", res_code);
+    exit(1);
 }

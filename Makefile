@@ -10,8 +10,8 @@ DEPS := $(patsubst $(SRC_DIR)/%.c,$(DEP_DIR)/%.d,$(SRCS))
 CC      := gcc
 LD      := gcc
 CFLAGS  := -O0 -g -std=c99 -Wall -Wextra -pedantic
-CFLAGS  += $(shell pkg-config --cflags libcurl)
-LDFLAGS := $(shell pkg-config --libs libcurl)
+CFLAGS  += $(shell pkg-config --cflags libcurl libcjson)
+LDFLAGS := $(shell pkg-config --libs libcurl libcjson)
 
 OBJ_FULLDIR       = $(subst /,\,$(dir $(OBJ_DIR)/$*.o))
 DEP_FULLDIR       = $(subst /,\,$(dir $(DEP_DIR)/$*.d))
