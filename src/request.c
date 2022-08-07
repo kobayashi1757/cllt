@@ -20,6 +20,7 @@ typedef struct Postfield {
 } Postfield;
 
 static size_t string_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
+static size_t file_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
 static void check_nonnull(void *ptr, const char *function);
 static void check_curlcode(CURLcode code, const char *error_buf);
 static char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields);
@@ -193,6 +194,35 @@ char *request_translate_file(const char *file, const char *source, const char *t
     return string.data;
 }
 
+void download_file_from_url(const char *url, const char *output) {
+    CURL *curl = curl_easy_init();
+    if (curl == NULL) {
+        fprintf(stderr, "Something went wrong with curl");
+        exit(1);
+    }
+
+    FILE *file = fopen(output, "wb");
+    if (file == NULL) {
+        fprintf(stderr, "Couldn't open \"%s\"", output);
+        exit(1);
+    }
+
+    char error_buf[CURL_ERROR_SIZE] = { 0 };
+
+    // Set options
+    check_curlcode(curl_easy_setopt(curl, CURLOPT_URL, url), NULL);
+    check_curlcode(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file), NULL);
+    check_curlcode(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, file_write_callback), NULL);
+    check_curlcode(curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error_buf), NULL);
+    check_curlcode(curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L), NULL);
+
+    // Perform the request
+    check_curlcode(curl_easy_perform(curl), error_buf);
+
+    fclose(file);
+    curl_easy_cleanup(curl);
+}
+
 static
 size_t string_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
     size_t total_size = size * nmemb;
@@ -210,9 +240,15 @@ size_t string_write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
 }
 
 static
+size_t file_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
+    FILE **file = userdata;
+    return size * fwrite(ptr, size, nmemb, *file);
+}
+
+static
 void check_nonnull(void *ptr, const char *function) {
     if (ptr == NULL) {
-        fprintf(stderr, "Function '%s' failed", function);
+        fprintf(stderr, "Function \"%s\" failed", function);
         exit(1);
     }
 }

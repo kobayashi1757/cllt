@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cJSON.h>
+#include "option.h"
+#include "request.h"
 #include "parse.h"
 
 void parse_detect(const char *response) {
@@ -109,7 +111,11 @@ void parse_translate_file(const char *response) {
         goto fail;
     }
 
-    fputs(translated_file_url_string, stdout);
+    if (global_opts.output != NULL) {
+        download_file_from_url(translated_file_url_string, global_opts.output);
+    } else {
+        fputs(translated_file_url_string, stdout);
+    }
 
     cJSON_Delete(json);
     return;
