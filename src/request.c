@@ -35,7 +35,11 @@ char *request_detect(const char *q) {
 
     String string = { 0 };
     char error_buf[CURL_ERROR_SIZE] = { 0 };
+#ifdef API_KEY
+    char *postfields = get_urlencoded_postfieids(curl, 2, (Postfield[]) { { "q", q }, { "api_key", API_KEY } });
+#else
     char *postfields = get_urlencoded_postfieids(curl, 1, (Postfield[]) { { "q", q } });
+#endif
 
     // Set options
     // TODO: add 'accept: application/json' to the header
@@ -106,7 +110,11 @@ char *request_translate(const char *q, const char *source, const char *target) {
 
     String string = { 0 };
     char error_buf[CURL_ERROR_SIZE] = { 0 };
+#ifdef API_KEY
+    char *postfields = get_urlencoded_postfieids(curl, 5, (Postfield[]) { { "q", q }, { "source", source }, { "target", target }, { "format", "text" }, { "api_key", API_KEY } });
+#else
     char *postfields = get_urlencoded_postfieids(curl, 4, (Postfield[]) { { "q", q }, { "source", source }, { "target", target }, { "format", "text" } });
+#endif
 
     // Set options
     // TODO: add 'accept: application/json' to the header
@@ -167,6 +175,14 @@ char *request_translate_file(const char *file, const char *source, const char *t
     check_nonnull(field, "curl_mime_addpart");
     check_curlcode(curl_mime_name(field, "target"), NULL);
     check_curlcode(curl_mime_data(field, target, CURL_ZERO_TERMINATED), NULL);
+
+#ifdef API_KEY
+    // Add 'api_key' field
+    field = curl_mime_addpart(form);
+    check_nonnull(field, "curl_mime_addpart");
+    check_curlcode(curl_mime_name(field, "api_key"), NULL);
+    check_curlcode(curl_mime_data(field, API_KEY, CURL_ZERO_TERMINATED), NULL);
+#endif
 
     // Set options
     // TODO: add 'accept: application/json' to the header
@@ -267,12 +283,12 @@ void check_curlcode(CURLcode code, const char *error_buf) {
 
 static
 char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields) {
-    char *escaped_strings[4];
-    size_t lengths[4];
+    char *escaped_strings[5];
+    size_t lengths[5];
     size_t len = 0;
 
     // Get encoded strings
-    assert(num <= 4 && num > 0);
+    assert(num <= 5 && num > 0);
     for (int i=0; i<num; i++) {
         escaped_strings[i] = curl_easy_escape(curl, postfields[i].value, 0);
         if (escaped_strings[i] == NULL) {
