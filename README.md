@@ -4,6 +4,18 @@
 
 `cllt` is a command-line tool for translating text by using the [LibreTranslate API](https://github.com/LibreTranslate/LibreTranslate).
 
+## Building
+
+`cllt` depends on [curl](https://github.com/curl/curl) and [cJSON](https://github.com/DaveGamble/cJSON). Make sure these libraries are installed. Then use `make` to build `cllt`.
+
+```
+# build in debug mode
+$ make
+
+# build in release mode
+$ make release
+```
+
 ## Configuration
 
 By default, `cllt` connects to the public instance at [libretranslate.de](https://libretranslate.de/).
