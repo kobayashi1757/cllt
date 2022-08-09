@@ -40,9 +40,8 @@ void parse_arguments(int argc, char **argv) {
 }
 
 void show_help(void) {
-    // TODO: rename this program
     printf("Usage:\n");
-    printf("  main.exe [OPTIONS] [TEXT]\n");
+    printf("  cllt [OPTIONS] [TEXT]\n");
     printf("\n");
     printf("Options:\n");
     printf("  -h        : show help\n");
