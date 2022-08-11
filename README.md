@@ -8,12 +8,14 @@
 
 `cllt` depends on [curl](https://github.com/curl/curl) and [cJSON](https://github.com/DaveGamble/cJSON). Make sure these libraries are installed. Then use `make` to build `cllt`.
 
+To build in debug mode:
 ```
-# build in debug mode
-$ make
+make
+```
 
-# build in release mode
-$ make release
+To build in release mode:
+```
+make release
 ```
 
 ## Configuration
@@ -41,16 +43,22 @@ Options:
 
 ## Examples
 
+Detect the language of "Ciao!":
 ```
-# detect the language of "Ciao!"
-$ cllt "Ciao!"
+cllt "Ciao!"
+```
 
-# list all supported languages
-$ cllt -l
+List all supported languages:
+```
+cllt -l
+```
 
-# translate "Hello world!" from english to japanese
-$ cllt -s en -t ja "Hello world!"
+Translate "Hello world!" from english to japanese:
+```
+cllt -s en -t ja "Hello world!"
+```
 
-# translate the file named "text_en" and output to a file named "text_ja"
-$ cllt -s en -t ja -f text_en -o text_ja
+Translate the file named "text_en" and output to a file named "text_ja":
+```
+cllt -s en -t ja -f text_en -o text_ja
 ```
