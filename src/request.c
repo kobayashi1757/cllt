@@ -308,8 +308,8 @@ char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields) {
     len = 0;
     for (int i=0; i<num; i++) {
         if (i > 0) {
-            snprintf(encoded_string + len, sizeof("&"), "&");
-            len += 1;
+            snprintf(encoded_string + len, strlen("&") + 1, "&");
+            len += strlen("&");
         }
         snprintf(encoded_string + len, lengths[i] + 1, "%s=%s", postfields[i].key, escaped_strings[i]);
         len += lengths[i];
