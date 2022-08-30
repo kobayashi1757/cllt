@@ -283,15 +283,15 @@ void check_curlcode(CURLcode code, const char *error_buf) {
 
 static
 char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields) {
-    char *escaped_strings[5];
+    char *escaped_values[5];
     size_t lengths[5];
     size_t len = 0;
 
     // Get encoded strings
     assert(num <= 5 && num > 0);
     for (int i=0; i<num; i++) {
-        escaped_strings[i] = curl_easy_escape(curl, postfields[i].value, 0);
-        if (escaped_strings[i] == NULL) {
+        escaped_values[i] = curl_easy_escape(curl, postfields[i].value, 0);
+        if (escaped_values[i] == NULL) {
             fprintf(stderr, "URL encoding failed");
             exit(1);
         }
@@ -299,7 +299,7 @@ char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields) {
         if (i > 0) {
             len += strlen("&");
         }
-        lengths[i] = strlen(postfields[i].key) + strlen("=") + strlen(escaped_strings[i]);
+        lengths[i] = strlen(postfields[i].key) + strlen("=") + strlen(escaped_values[i]);
         len += lengths[i];
     }
 
@@ -311,13 +311,13 @@ char *get_urlencoded_postfieids(CURL *curl, int num, Postfield *postfields) {
             snprintf(encoded_string + len, strlen("&") + 1, "&");
             len += strlen("&");
         }
-        snprintf(encoded_string + len, lengths[i] + 1, "%s=%s", postfields[i].key, escaped_strings[i]);
+        snprintf(encoded_string + len, lengths[i] + 1, "%s=%s", postfields[i].key, escaped_values[i]);
         len += lengths[i];
     }
 
     // Cleanup
     for (int i=0; i<num; i++) {
-        curl_free(escaped_strings[i]);
+        curl_free(escaped_values[i]);
     }
     return encoded_string;
 }
